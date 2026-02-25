@@ -30,11 +30,19 @@ class _AddEditContactScreenState extends State<AddEditContactScreen> {
   @override
   void initState() {
     super.initState();
-    _firstNameController = TextEditingController(text: widget.contact?.firstName ?? '');
-    _lastNameController = TextEditingController(text: widget.contact?.lastName ?? '');
-    _phoneController = TextEditingController(text: widget.contact?.phoneNumber ?? '');
+    _firstNameController = TextEditingController(
+      text: widget.contact?.firstName ?? '',
+    );
+    _lastNameController = TextEditingController(
+      text: widget.contact?.lastName ?? '',
+    );
+    _phoneController = TextEditingController(
+      text: widget.contact?.phoneNumber ?? '',
+    );
     _emailController = TextEditingController(text: widget.contact?.email ?? '');
-    _companyController = TextEditingController(text: widget.contact?.company ?? '');
+    _companyController = TextEditingController(
+      text: widget.contact?.company ?? '',
+    );
     _notesController = TextEditingController(text: widget.contact?.notes ?? '');
 
     // Listen for changes
@@ -88,9 +96,15 @@ class _AddEditContactScreenState extends State<AddEditContactScreen> {
       firstName: _firstNameController.text.trim(),
       lastName: _lastNameController.text.trim(),
       phoneNumber: _phoneController.text.trim(),
-      email: _emailController.text.trim().isEmpty ? null : _emailController.text.trim(),
-      company: _companyController.text.trim().isEmpty ? null : _companyController.text.trim(),
-      notes: _notesController.text.trim().isEmpty ? null : _notesController.text.trim(),
+      email: _emailController.text.trim().isEmpty
+          ? null
+          : _emailController.text.trim(),
+      company: _companyController.text.trim().isEmpty
+          ? null
+          : _companyController.text.trim(),
+      notes: _notesController.text.trim().isEmpty
+          ? null
+          : _notesController.text.trim(),
       isFavorite: widget.contact?.isFavorite ?? false,
       createdAt: widget.contact?.createdAt,
     );
@@ -112,9 +126,9 @@ class _AddEditContactScreenState extends State<AddEditContactScreen> {
         );
         Navigator.pop(context, true);
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to save contact')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Failed to save contact')));
       }
     }
   }
@@ -126,7 +140,9 @@ class _AddEditContactScreenState extends State<AddEditContactScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Discard changes?'),
-        content: const Text('You have unsaved changes. Are you sure you want to discard them?'),
+        content: const Text(
+          'You have unsaved changes. Are you sure you want to discard them?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -184,11 +200,16 @@ class _AddEditContactScreenState extends State<AddEditContactScreen> {
                   color: AppColors.surface,
                   child: Center(
                     child: ListenableBuilder(
-                      listenable: Listenable.merge([_firstNameController, _lastNameController]),
+                      listenable: Listenable.merge([
+                        _firstNameController,
+                        _lastNameController,
+                      ]),
                       builder: (context, child) {
                         return ContactAvatar(
                           name: _currentDisplayName,
-                          initials: _currentInitials.isEmpty ? '+' : _currentInitials,
+                          initials: _currentInitials.isEmpty
+                              ? '+'
+                              : _currentInitials,
                           radius: 45,
                         );
                       },
@@ -232,6 +253,17 @@ class _AddEditContactScreenState extends State<AddEditContactScreen> {
                           if (value == null || value.trim().isEmpty) {
                             return 'Please enter a phone number';
                           }
+                          final phoneRegex = RegExp(r'^[0-9+\-\s()]+$');
+                          if (!phoneRegex.hasMatch(value.trim())) {
+                            return 'Phone number can only contain digits, +, -, (, )';
+                          }
+                          if (value
+                                  .trim()
+                                  .replaceAll(RegExp(r'[^0-9]'), '')
+                                  .length <
+                              7) {
+                            return 'Phone number must have at least 7 digits';
+                          }
                           return null;
                         },
                       ),
@@ -243,7 +275,9 @@ class _AddEditContactScreenState extends State<AddEditContactScreen> {
                         keyboardType: TextInputType.emailAddress,
                         validator: (value) {
                           if (value != null && value.trim().isNotEmpty) {
-                            final emailRegex = RegExp(r'^[\w\.-]+@[\w\.-]+\.\w+$');
+                            final emailRegex = RegExp(
+                              r'^[\w\.-]+@[\w\.-]+\.\w+$',
+                            );
                             if (!emailRegex.hasMatch(value.trim())) {
                               return 'Please enter a valid email';
                             }
@@ -289,10 +323,7 @@ class _AddEditContactScreenState extends State<AddEditContactScreen> {
   }) {
     return TextFormField(
       controller: controller,
-      decoration: InputDecoration(
-        labelText: label,
-        prefixIcon: Icon(icon),
-      ),
+      decoration: InputDecoration(labelText: label, prefixIcon: Icon(icon)),
       keyboardType: keyboardType,
       validator: validator,
       maxLines: maxLines,
@@ -300,4 +331,3 @@ class _AddEditContactScreenState extends State<AddEditContactScreen> {
     );
   }
 }
-

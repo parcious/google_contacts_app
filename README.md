@@ -67,7 +67,7 @@ lib/
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/YOUR_USERNAME/google_contacts_app.git
+git clone https://github.com/parcious/google_contacts_app.git
 cd google_contacts_app
 
 # 2. Install dependencies

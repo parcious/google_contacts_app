@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter_phone_direct_caller/flutter_phone_direct_caller.dart';
 import '../providers/contact_provider.dart';
 import '../models/contact.dart';
 import '../widgets/contact_avatar.dart';
@@ -39,26 +40,39 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
   }
 
   Future<void> _makePhoneCall(String phoneNumber) async {
-    final Uri phoneUri = Uri(scheme: 'tel', path: phoneNumber);
-    if (await canLaunchUrl(phoneUri)) {
-      await launchUrl(phoneUri);
-    } else {
+    // Direct call — no dialer shown, calls immediately like Google Contacts
+    try {
+      final bool? result = await FlutterPhoneDirectCaller.callNumber(
+        phoneNumber,
+      );
+      if (result == false && mounted) {
+        // Fallback to tel: if direct call fails (e.g., permission denied)
+        final Uri phoneUri = Uri.parse('tel:$phoneNumber');
+        if (await canLaunchUrl(phoneUri)) {
+          await launchUrl(phoneUri);
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Could not initiate call')),
+          );
+        }
+      }
+    } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Could not launch phone dialer')),
+          const SnackBar(content: Text('Could not initiate call')),
         );
       }
     }
   }
 
   Future<void> _sendEmail(String email) async {
-    final Uri emailUri = Uri(scheme: 'mailto', path: email);
-    if (await canLaunchUrl(emailUri)) {
-      await launchUrl(emailUri);
-    } else {
+    final Uri emailUri = Uri.parse('mailto:$email');
+    try {
+      await launchUrl(emailUri, mode: LaunchMode.externalApplication);
+    } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Could not launch email app')),
+          const SnackBar(content: Text('No email app found on this device')),
         );
       }
     }
@@ -119,9 +133,7 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
         final success = await provider.deleteContact(_contact!.id!);
         if (success && mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('${_contact!.displayName} deleted'),
-            ),
+            SnackBar(content: Text('${_contact!.displayName} deleted')),
           );
           Navigator.pop(context, true);
         }
@@ -172,11 +184,17 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
       actions: [
         IconButton(
           icon: Icon(
-            _contact!.isFavorite ? Icons.star_rounded : Icons.star_outline_rounded,
-            color: _contact!.isFavorite ? AppColors.favoriteActive : Colors.white,
+            _contact!.isFavorite
+                ? Icons.star_rounded
+                : Icons.star_outline_rounded,
+            color: _contact!.isFavorite
+                ? AppColors.favoriteActive
+                : Colors.white,
           ),
           onPressed: _toggleFavorite,
-          tooltip: _contact!.isFavorite ? 'Remove from favorites' : 'Add to favorites',
+          tooltip: _contact!.isFavorite
+              ? 'Remove from favorites'
+              : 'Add to favorites',
         ),
         IconButton(
           icon: const Icon(Icons.edit_outlined),
@@ -211,7 +229,9 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
               end: Alignment.bottomCenter,
               colors: [
                 AppColors.getAvatarColor(_contact!.displayName),
-                AppColors.getAvatarColor(_contact!.displayName).withValues(alpha: 0.8),
+                AppColors.getAvatarColor(
+                  _contact!.displayName,
+                ).withValues(alpha: 0.8),
               ],
             ),
           ),
@@ -300,12 +320,18 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 IconButton(
-                  icon: const Icon(Icons.call_outlined, color: AppColors.primary),
+                  icon: const Icon(
+                    Icons.call_outlined,
+                    color: AppColors.primary,
+                  ),
                   onPressed: () => _makePhoneCall(_contact!.phoneNumber),
                   tooltip: 'Call',
                 ),
                 IconButton(
-                  icon: const Icon(Icons.message_outlined, color: AppColors.primary),
+                  icon: const Icon(
+                    Icons.message_outlined,
+                    color: AppColors.primary,
+                  ),
                   onPressed: () => _sendSms(_contact!.phoneNumber),
                   tooltip: 'Message',
                 ),
@@ -346,11 +372,7 @@ class _ActionButton extends StatelessWidget {
   final String label;
   final VoidCallback? onTap;
 
-  const _ActionButton({
-    required this.icon,
-    required this.label,
-    this.onTap,
-  });
+  const _ActionButton({required this.icon, required this.label, this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -401,16 +423,10 @@ class _InfoTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListTile(
       leading: Icon(icon, color: AppColors.textSecondary),
-      title: Text(
-        value,
-        style: const TextStyle(fontSize: 16),
-      ),
+      title: Text(value, style: const TextStyle(fontSize: 16)),
       subtitle: Text(
         label,
-        style: const TextStyle(
-          fontSize: 12,
-          color: AppColors.textSecondary,
-        ),
+        style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
       ),
       trailing: trailing,
     );
