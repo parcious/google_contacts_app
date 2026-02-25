@@ -3,7 +3,7 @@
     <uses-permission android:name="android.permission.CALL_PHONE"/>
     <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
     <application
-        android:label="google_contacts_app"
+        android:label="Google Contacts"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
